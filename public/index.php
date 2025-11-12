@@ -597,7 +597,16 @@ Router::get('/clients/{id}/download', function ($params) {
         }
         
         $config = $client->getConfig();
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $clientData['name']) . '.conf';
+        
+        // Check if name contains non-Latin characters
+        $hasNonLatin = preg_match('/[^a-zA-Z0-9_-]/', $clientData['name']);
+        if ($hasNonLatin) {
+            // Use user_(client_id)_s(server_id).conf format for non-Latin names
+            $filename = 'user_' . $clientData['id'] . '_s' . $clientData['server_id'] . '.conf';
+        } else {
+            // Use client name for Latin characters
+            $filename = $clientData['name'] . '.conf';
+        }
         
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -1787,6 +1796,36 @@ Router::post('/settings/delete-user/{id}', function ($params) {
     require_once __DIR__ . '/../controllers/SettingsController.php';
     $controller = new SettingsController();
     $controller->deleteUser($params['id']);
+});
+
+// LDAP settings page
+Router::get('/settings/ldap', function () {
+    requireAdmin();
+    
+    require_once __DIR__ . '/../controllers/SettingsController.php';
+    require_once __DIR__ . '/../inc/LdapSync.php';
+    $controller = new SettingsController();
+    $controller->ldapSettings();
+});
+
+// Save LDAP settings
+Router::post('/settings/ldap/save', function () {
+    requireAdmin();
+    
+    require_once __DIR__ . '/../controllers/SettingsController.php';
+    require_once __DIR__ . '/../inc/LdapSync.php';
+    $controller = new SettingsController();
+    $controller->saveLdapSettings();
+});
+
+// Test LDAP connection
+Router::post('/settings/ldap/test', function () {
+    requireAdmin();
+    
+    require_once __DIR__ . '/../controllers/SettingsController.php';
+    require_once __DIR__ . '/../inc/LdapSync.php';
+    $controller = new SettingsController();
+    $controller->testLdapConnection();
 });
 
 /**

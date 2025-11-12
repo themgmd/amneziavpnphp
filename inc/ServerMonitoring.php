@@ -267,6 +267,15 @@ class ServerMonitoring
             $stats['speed_up_kbps'],
             $stats['speed_down_kbps'],
         ]);
+        
+        // Update last_handshake in vpn_clients table
+        $stmt = $db->prepare("
+            UPDATE vpn_clients 
+            SET last_handshake = NOW() 
+            WHERE id = ?
+        ");
+        
+        $stmt->execute([$clientId]);
     }
     
     /**
